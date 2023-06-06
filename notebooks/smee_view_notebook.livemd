@@ -1,0 +1,100 @@
+<!-- livebook:{"app_settings":{"slug":"smee_view"}} -->
+
+# SmeeView Workbook
+
+```elixir
+Mix.install([{:smee_view, ">= 0.1.0"}, {:rambo, "~> 0.3.4"}])
+alias Smee.{Metadata, Entity, Source, MDQ}
+```
+
+## Requirements - Please Read!
+
+Backend tools
+Please note: SmeeView extends Smee, which does not do all processing itself using Elixir - it sometimes cheats
+(OK, it often cheats) by sending data to external programs for processing. At the moment it requires the following
+commandline utilities:
+
+* xmlsec1
+* xmllint
+* xsltproc
+
+On Debian: `sudo apt-get install xmlsec1 libxml2-utils xsltproc`
+On RedHat: `sudo yum install xmlsec1 libxml2 libxslt`
+On Macs: `brew install xmlsec1 libxml2 libxslt`
+
+## First let's grab some federation metadata
+```elixir
+federation_metadata = Smee.source("http://metadata.ukfederation.org.uk/ukfederation-metadata.xml")
+|> Smee.fetch!()
+```
+
+## Also let's get one entity via MDQ
+
+```elixir
+
+entity = Smee.MDQ.source("http://mdq.ukfederation.org.uk/")
+         |> Smee.MDQ.lookup!("https://cern.ch/login")
+
+```
+
+### Extracting all data for an entity
+
+The top-level `view_one/2` function will return one entity struct.
+
+```elixir
+
+SmeeView.view_one(entity)
+
+```
+
+### Viewing all logos in an entire federation
+
+You can view all logos as a list:
+
+```elixir
+SmeeView.Logos.view(federation_metadata)
+
+```
+But it might be more useful to have a list of all logos for each entity:
+
+```elixir
+SmeeView.Logos.prism(federation_metadata)
+
+```
+
+### Selecting the most appropriate service displayname 
+
+```elixir
+entity
+|> SmeeView.Displaynames.view()
+|> SmeeView.Displaynames.pick("en")
+|> SmeeView.Aspects.Displayname.text()
+```
+
+### Find all the tiny square logos for IdPs in PNG format in German
+
+(It's a very contrived example)
+
+```elixir
+federation_metadata
+|> SmeeView.Logos.view(:idp)
+|> Enum.filter(
+     fn logo ->
+       SmeeView.Aspects.Logo.size(logo) == :tiny &&
+         SmeeView.Aspects.Logo.shape(logo) == :square &&
+         SmeeView.Aspects.Logo.format(logo) == :png &&
+         SmeeView.Aspects.Logo.lang(logo) == "de"
+     end
+   )
+
+```
+
+### Extract the assurance certifications of each entity in a federation
+
+This demonstrates the usefulness of prism views
+
+```elixir
+SmeeView.EntityAttributes.prism(federation_metadata)
+|> SmeeView.EntityAttributes.assurance_certifications()
+
+```

@@ -1,0 +1,14 @@
+# Created by .ignore support plugin (hsz.mobi)
+scratch
+Gemfile
+Gemfile.lock
+LICENSE
+specs
+README.md
+Rakefile
+exported_defaults
+.gitignore
+.dockerignore
+.travis.yml
+.github
+exported_optfs

@@ -91,7 +91,7 @@ task :shell => [:build] do
 end
 
 desc "Build and publish all Docker images to Github"
-task publish: [:publish_mp_mode, "build:all"] do
+task publish: [:publish_mp_mode, :build] do
   puts "Complete!"
 end
 

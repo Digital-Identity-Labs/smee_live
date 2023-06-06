@@ -3,39 +3,51 @@
 # SmeeFeds Workbook
 
 ```elixir
-Mix.install([{:smee_feds, ">= 0.1.1"}, {:rambo, "~> 0.3.4"}])
+Mix.install(
+  [{:smee, ">= 0.2.0"}, {:smee_view, ">= 0.1.0"}, {:smee_feds, ">= 0.1.0"}, {:rambo, "~> 0.3.4"}, {:kino, "~>0.9.4"}]
+)
 alias Smee.{Metadata, Entity, Source, MDQ}
 alias SmeeFeds.Federation
 ```
 
-## Requirements - Please Read!
+## What is SmeeFeds?
 
-Backend tools
-Please note: Smee does not do all processing itself using Elixir - it sometimes cheats (OK, it often cheats) by sending
- data to external programs for processing. At the moment it requires the following commandline utilities:
+SmeeFeds is a small federation management extension to Smee for use in research, testing and development.
 
-* xmlsec1
-* xmllint
-* xsltproc
-
-On Debian: `sudo apt-get install xmlsec1 libxml2-utils xsltproc`
-On RedHat: `sudo yum install xmlsec1 libxml2 libxslt`
-On Macs: `brew install xmlsec1 libxml2 libxslt`
-
-## Grabbing some metadata with Smee
-
-```elixir
-xml =
-  Smee.source("http://metadata.ukfederation.org.uk/ukfederation-metadata.xml")
-  |> Smee.fetch!()
-  |> Smee.Metadata.xml()
-```
+Smee has tools for handling the sources of SAML metadata but nothing to represent the publishers of metadata. SmeeFeds
+adds a few tools for handling federations and includes a large collection of information about research and education
+federations.
 
 ## Using MDQ from SmeeFeds
+
+This is similar to earlier examples but looks up the service details from SmeeFeds data
+
+**You should not do this using the default data in production!**
 
 ```elixir
 cern_idp =
   SmeeFeds.get(:ukamf)
   |> SmeeFeds.Federation.mdq()
   |> MDQ.lookup!("https://cern.ch/login")
+```
+
+## Presenting data for a few federations
+
+In this example snippet we look up data for a set of federations and pipe that information into Kino to create a nice
+table.
+
+```elixir
+SmeeFeds.federations([:wayf, :haka, :dfnaai, :swamid])
+|> Kino.DataTable.new()
+```
+
+## Using the quick Markdown export
+
+SmeeFeds has a built-in Markdown compatible export function for dumping its database into documentation. Here we pipe it
+into Kino, but you'd normally save it do disk or render it for showing on a webpage.
+
+```elixir
+SmeeFeds.federations()
+|> SmeeFeds.Export.markdown()
+|> Kino.Markdown.new()
 ```

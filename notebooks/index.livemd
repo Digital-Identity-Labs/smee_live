@@ -1,36 +1,35 @@
 <!-- livebook:{"app_settings":{"slug":"smee_live_index"}} -->
 
-# Smee Workbook
+# Smee Live Introduction
 
 ```elixir
-Mix.install([{:smee, ">= 0.2.0"}, {:rambo, "~> 0.3.4"}])
+Mix.install(
+  [{:smee, ">= 0.2.0"}, {:smee_view, ">= 0.1.0"}, {:smee_feds, ">= 0.1.0"}, {:rambo, "~> 0.3.4"}, {:kino, "~>0.9.4"}]
+)
 alias Smee.{Metadata, Entity, Source, MDQ}
 ```
 
-## Requirements - Please Read!
+## What is this?
 
-Backend tools
-Please note: Smee does not do all processing itself using Elixir - it sometimes cheats (OK, it often cheats) by sending
-data to external programs for processing. At the moment it requires the following commandline utilities:
+[Smee](https://github.com/Digital-Identity-Labs/smee) is a pragmatic library for handling
+[SAML metadata](https://en.wikipedia.org/wiki/SAML_metadata) with [Elixir](https://elixir-lang.org/), 
+[Erlang](https://www.erlang.org/) or any [other BEAM language](https://gleam.run/). [LiveBook](https://livebook.dev/) 
+is a web application that automates code & data workflows with interactive notebooks.
+[Docker](https://www.docker.com/) lets you run applications neatly packaged up with all their requirements.
 
-* xmlsec1
-* xmllint
-* xsltproc
+SmeeLive is a customised Docker container running LiveBook, with all the extra software needed by Smee already installed,
+and a set of demonstration notebooks that hopefully show off various features of Smee.
 
-On Debian: `sudo apt-get install xmlsec1 libxml2-utils xsltproc`
-On RedHat: `sudo yum install xmlsec1 libxml2 libxslt`
-On Macs: `brew install xmlsec1 libxml2 libxslt`
+The requirements for Smee (xmlsec1, xmllint and xsltproc) have already been installed on this container - if you're
+running these notebooks on another installation of Livebook you'll need to make sure they're available.
 
-## Grabbing some metadata with Smee
+Please click the little play button above a snippet to run the code. These notebooks are fully editable, so feel free
+to change the code or add new snippets!
 
-```elixir
-xml =
-  Smee.source("http://metadata.ukfederation.org.uk/ukfederation-metadata.xml")
-  |> Smee.fetch!()
-  |> Smee.Metadata.xml()
-```
+## A quick example
 
-## Using MDQ from SmeeFeds
+This snippet will use Smee to download data for CERN's IdP from the UK Access Management Federation's MDQ service, and 
+store it in a variable called `cern_idp` as a Smee Entity struct.
 
 ```elixir
 cern_idp =
@@ -38,17 +37,38 @@ cern_idp =
   |> MDQ.lookup!("https://cern.ch/login")
 ```
 
-## List all IdPs
+This snippet will then extract details of entity attributes from the entity using SmeeView
 
 ```elixir
-alias Smee.{Source, Fetch, Filter, Metadata}
-
-"http://metadata.ukfederation.org.uk/ukfederation-metadata.xml"
-|> Source.new()
-|> Fetch.remote!()
-|> Metadata.stream_entities()
-|> Filter.idp()
-|> Stream.map(fn e -> e.uri end)
-|> Enum.to_list()
-
+SmeeView.EntityAttributes.view(cern_idp)
 ```
+
+By default LiveBook will show a summary of the raw Elixir output from the code snippets. Let's try piping that into a Kino
+function to show it as a nice table:
+
+```elixir
+cern_idp
+|> SmeeView.EntityAttributes.view()
+|> Kino.DataTable.new()
+```
+
+## Open the other notebooks for more examples
+
+Click on the **open** button to see other notebooks included with this container:
+
+* `smee.livemd` Examples using the basic Smee package for downloading and processing metadata XML
+* `smee_feds.livemd` Examples that use the example federation database in SmeeFeds
+* `smee_view.livemd` Examples for the SmeeView package, extracting data (like logos, text, attributes) from metadata
+
+## More information
+
+* [Kino](https://hexdocs.pm/kino/Kino.html) can be used to present results
+* LiveBook has a huge amount of documentation inside it - click on Home or the logo to return to the homepage
+* [The LiveBook website](https://livebook.dev/) has more information on customising LiveBook and using it with Docker
+* Documentation for Smee is available inside this Livebook (hover over the examples!) but also
+  at [HexDocs](https://hexdocs.pm/smee)
+
+The Smee libraries are normal Elixir packages and do not require LiveBook - you can use them to build scripts and apps.
+You can [read more about installing Elixir here](https://elixir-lang.org/install.html)
+
+LiveBook is best [installed directly onto your computer](https://livebook.dev/#install)!

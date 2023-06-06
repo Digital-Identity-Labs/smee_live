@@ -21,7 +21,7 @@ used information in SAML metadata.
 SmeeView is loosely based on the concept of functional data access "lenses".
 
 
-## First let's get one entity via MDQ
+### First let's get one entity via MDQ
 
 We'll reuse this entity data a few times later
 

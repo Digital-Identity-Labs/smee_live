@@ -3,34 +3,34 @@
 # Smee Workbook
 
 ```elixir
-Mix.install([{:smee, ">= 0.2.0"}, {:rambo, "~> 0.3.4"}])
+Mix.install(
+ [{:smee, ">= 0.2.0"}, {:smee_view, ">= 0.1.0"}, {:smee_feds, ">= 0.1.0"}, {:rambo, "~> 0.3.4"}, {:kino, "~>0.9.4"}]
+)
 alias Smee.{Metadata, Entity, Source, MDQ}
 ```
 
-## Requirements - Please Read!
+## Grabbing some aggregated metadata with Smee and showing the XML
 
-Backend tools
-Please note: Smee does not do all processing itself using Elixir - it sometimes cheats (OK, it often cheats) by sending
- data to external programs for processing. At the moment it requires the following commandline utilities:
-
-* xmlsec1
-* xmllint
-* xsltproc
-
-On Debian: `sudo apt-get install xmlsec1 libxml2-utils xsltproc`
-On RedHat: `sudo yum install xmlsec1 libxml2 libxslt`
-On Macs: `brew install xmlsec1 libxml2 libxslt`
-
-## Grabbing some metadata with Smee
+We download the XML, store it in a Metadata struct before outputting the XML again.
 
 ```elixir
-xml =
+xml_fragment =
   Smee.source("http://metadata.ukfederation.org.uk/ukfederation-metadata.xml")
   |> Smee.fetch!()
   |> Smee.Metadata.xml()
+  |> String.slice(0..5000) # I'd rather not show 80MB of XML!
+
+Kino.Markdown.new("""
+\`\`\`xml
+  #{xml_fragment}
+\`\`\`
+""")
 ```
 
-## Using MDQ from SmeeFeds
+## Using MDQ
+
+MDQ is a much more efficient way to fetch just the metadata you need, when you need it. This snippet is returning a
+`Smee.Entity` struct.
 
 ```elixir
 cern_idp =
@@ -38,7 +38,10 @@ cern_idp =
   |> MDQ.lookup!("https://cern.ch/login")
 ```
 
-## List all IdPs
+## List all IdP entity IDs along with their hashed IDs
+
+Here we download a large aggregated metadata file, and stream the entity data from it one by one to extract just the 
+entity IDs and SHA1 ID hashes. The resulting map is piped into Kino for display.
 
 ```elixir
 alias Smee.{Source, Fetch, Filter, Metadata}
@@ -48,7 +51,8 @@ alias Smee.{Source, Fetch, Filter, Metadata}
 |> Fetch.remote!()
 |> Metadata.stream_entities()
 |> Filter.idp()
-|> Stream.map(fn e -> e.uri end)
+|> Stream.map(fn e -> %{ entity_id: e.uri, hashed_id: "{sha1}#{e.uri_hash}" } end)
 |> Enum.to_list()
+|> Kino.DataTable.new()
 
 ```

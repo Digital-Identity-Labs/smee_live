@@ -31,7 +31,7 @@ federation_metadata = Smee.source("http://metadata.ukfederation.org.uk/ukfederat
 
 ## Also let's get one entity via MDQ
 
-We'll reuse this enttiy data a few times later
+We'll reuse this entity data a few times later
 
 ```elixir
 
@@ -42,7 +42,9 @@ entity = Smee.MDQ.source("http://mdq.ukfederation.org.uk/")
 
 ### Extracting all data for an entity
 
-The top-level `view_one/2` function will return one entity "aspect" struct.
+The top-level `view_one/2` function will return one entity "aspect" struct. You can see how the data in a 
+`SmeeView.Aspects.Entity` struct is very different to the `Smee.Entity` struct - it has much more detail in an easier
+format.
 
 ```elixir
 
@@ -97,11 +99,18 @@ federation_metadata
 
 ### Extract the assurance certifications of each entity in a federation
 
-This demonstrates the usefulness of prism views. We're piping the output into Kino for a nice table.
+This demonstrates the usefulness of prism views. A map of entityID => assurance certifications is returned.
 
 ```elixir
-SmeeView.EntityAttributes.prism(federation_metadata)
-|> SmeeView.EntityAttributes.assurance_certifications()
-|> Kino.DataTable.new()
+certifications = SmeeView.EntityAttributes.prism(federation_metadata)
+                 |> SmeeView.EntityAttributes.assurance_certifications()
 
+```
+
+The same data again, restructured into a list of maps so Kino can show it easily:
+
+```elixir
+certifications
+|> Enum.map(fn {k, v} -> %{entity: k, certifications: v} end)
+|> Kino.DataTable.new(name: "Certifications", keys: [:entity, :certifications])
 ```

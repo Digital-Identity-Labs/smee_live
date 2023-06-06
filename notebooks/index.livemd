@@ -11,7 +11,7 @@ alias Smee.{Metadata, Entity, Source, MDQ}
 
 Backend tools
 Please note: Smee does not do all processing itself using Elixir - it sometimes cheats (OK, it often cheats) by sending
- data to external programs for processing. At the moment it requires the following commandline utilities:
+data to external programs for processing. At the moment it requires the following commandline utilities:
 
 * xmlsec1
 * xmllint

@@ -42,8 +42,8 @@ namespace :build do
       "ghcr.io/digital-identity-labs/#{container_name}:#{major_version}",
       "ghcr.io/digital-identity-labs/#{container_name}:#{minor_version}",
       "ghcr.io/digital-identity-labs/#{container_name}:latest",
-        "digitalidentity/#{container_name}:#{full_version}",
-        "digitalidentity/#{container_name}:latest",
+      "digitalidentity/#{container_name}:#{full_version}",
+      "digitalidentity/#{container_name}:latest",
     ].map { |t| " -t #{t}" }.join(" ")
 
     sh [
@@ -64,6 +64,7 @@ namespace :build do
 
   end
 
+end
 
 desc "Rebuild the image"
 task :rebuild => [:force_reset, :build]

@@ -20,16 +20,8 @@ used information in SAML metadata.
 
 SmeeView is loosely based on the concept of functional data access "lenses".
 
-## First let's grab some federation metadata
 
-This may take awhile to download!
-
-```elixir
-federation_metadata = Smee.source("http://metadata.ukfederation.org.uk/ukfederation-metadata.xml")
-                      |> Smee.fetch!()
-```
-
-## Also let's get one entity via MDQ
+## First let's get one entity via MDQ
 
 We'll reuse this entity data a few times later
 
@@ -42,7 +34,7 @@ entity = Smee.MDQ.source("http://mdq.ukfederation.org.uk/")
 
 ### Extracting all data for an entity
 
-The top-level `view_one/2` function will return one entity "aspect" struct. You can see how the data in a 
+The top-level `view_one/2` function will return one entity "aspect" struct. You can see how the data in a
 `SmeeView.Aspects.Entity` struct is very different to the `Smee.Entity` struct - it has much more detail in an easier
 format.
 
@@ -54,17 +46,21 @@ SmeeView.view_one(entity)
 
 ### Viewing all logos in an entire federation
 
-You can view all logos as a list:
+You can view all logos as a list...
 
 ```elixir
-SmeeView.Logos.view(federation_metadata)
+Smee.source("http://metadata.ukfederation.org.uk/ukfederation-metadata.xml")
+|> Smee.fetch!()
+|> SmeeView.Logos.view()
 
 ```
 
-But it might be more useful to have a list of all logos for each entity:
+... but it might be more useful to have a list of all logos for each entity:
 
 ```elixir
-SmeeView.Logos.prism(federation_metadata)
+Smee.source("http://metadata.ukfederation.org.uk/ukfederation-metadata.xml")
+|> Smee.fetch!()
+|> SmeeView.Logos.prism()
 
 ```
 
@@ -84,7 +80,8 @@ entity
 (It's a very contrived example)
 
 ```elixir
-federation_metadata
+Smee.source("http://metadata.ukfederation.org.uk/ukfederation-metadata.xml")
+|> Smee.fetch!()
 |> SmeeView.Logos.view(:idp)
 |> Enum.filter(
      fn logo ->
@@ -96,13 +93,16 @@ federation_metadata
    )
 
 ```
+There might not actually be any of course.
 
 ### Extract the assurance certifications of each entity in a federation
 
 This demonstrates the usefulness of prism views. A map of entityID => assurance certifications is returned.
 
 ```elixir
-certifications = SmeeView.EntityAttributes.prism(federation_metadata)
+certifications = Smee.source("http://metadata.ukfederation.org.uk/ukfederation-metadata.xml")
+                 |> Smee.fetch!()
+                 |> SmeeView.EntityAttributes.prism()
                  |> SmeeView.EntityAttributes.assurance_certifications()
 
 ```

@@ -20,10 +20,14 @@ the installation to one line.
 ## Running SmeeLive
 
 1. You need to have Docker installed and running
-2. Then: `docker run -p 127.0.0.1:8080:8080 -p 127.0.0.1:8081:8081 --pull always ghcr.io/digitalidentity/smee_live`
+2. Then: `docker run -p 127.0.0.1:8080:8080 -p 127.0.0.1:8081:8081 --pull always ghcr.io/digital-identity-labs/smee_live`
 3. You should see a URL printed to the shell: open this in your browser to view Livebook.
 4. Click on the 'Open' button and select 'index.livemd' to open the overview notebook.
 5. Each block of code in the notebook can be run by clicking on the the little play button above it.
+
+SmeeLive is also available at DockerHub, so it can also be run with:
+
+`docker run -p 127.0.0.1:8080:8080 -p 127.0.0.1:8081:8081 --pull always digitalidentity/smee_live`
 
 ## More information
 

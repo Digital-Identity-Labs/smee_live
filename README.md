@@ -49,6 +49,6 @@ the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 ## Copyright and License
 
 Notebooks and Dockerfile are Copyright (c) 2023 Digital Identity Ltd, UK, and Apache 2.0 licensed
-Smee software is Copyright (c) 2023 Digital Identity Ltd, UK, and Apache 2.0 licensed.
+Smee software is Copyright (c) 2023, 2024 Digital Identity Ltd, UK, and Apache 2.0 licensed.
 
 LiveBook is property of [Dashbit](https://dashbit.co/)

@@ -1,4 +1,4 @@
-FROM ghcr.io/livebook-dev/livebook
+FROM ghcr.io/livebook-dev/livebook:latest
 
 LABEL description="Livebook with Smee requirements and example notebooks pre-installed" \
       maintainer="pete@digitalidentitylabs.com" \
@@ -11,3 +11,5 @@ RUN apt-get update && apt-get upgrade -y && apt-get install --no-install-recomme
     rm -rf /var/lib/apt/lists && rm -rf /usr/local/src/*
 
 COPY notebooks /data/
+
+CMD [ "/app/bin/livebook", "start", "/data/index.livemd" ]

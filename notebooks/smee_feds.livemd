@@ -3,51 +3,111 @@
 # SmeeFeds Workbook
 
 ```elixir
-Mix.install(
-  [{:smee, ">= 0.2.0"}, {:smee_view, ">= 0.1.0"}, {:smee_feds, ">= 0.1.0"}, {:rambo, "~> 0.3.4"}, {:kino, "~>0.9.4"}]
-)
+Mix.install([{:smee_feds, ">= 0.3.1"}, {:rambo, "~> 0.3.4"}])
 alias Smee.{Metadata, Entity, Source, MDQ}
-alias SmeeFeds.Federation
+alias SmeeFeds.{Federation, Import, Export}
 ```
 
-## What is SmeeFeds?
+## Requirements - Please Read!
 
-SmeeFeds is a small federation management extension to Smee for use in research, testing and development.
+Backend tools
+Please note: Smee does not do all processing itself using Elixir - it sometimes cheats (OK, it often cheats) by sending
+data to external programs for processing. At the moment it requires the following commandline utilities:
 
-Smee has tools for handling the sources of SAML metadata but nothing to represent the publishers of metadata. SmeeFeds
-adds a few tools for handling federations and includes a large collection of information about research and education
-federations.
+* xmlsec1
+* xmllint
+* xsltproc
 
-## Using MDQ from SmeeFeds
+On Debian: `sudo apt-get install xmlsec1 libxml2-utils xsltproc`
+On RedHat: `sudo yum install xmlsec1 libxml2 libxslt`
+On Macs: `brew install xmlsec1 libxml2 libxslt`
 
-This is similar to earlier examples but looks up the service details from SmeeFeds data
+### Finding an MDQ service
 
-**You should not do this using the default data in production!**
+Very few MDQ services are present in the data, but they can be used as follows:
 
 ```elixir
 cern_idp =
-  SmeeFeds.get(:ukamf)
+  SmeeFeds.federation(:incommon)
   |> SmeeFeds.Federation.mdq()
-  |> MDQ.lookup!("https://cern.ch/login")
+  |> Smee.MDQ.lookup!("https://cern.ch/login")
 ```
 
-## Presenting data for a few federations
-
-In this example snippet we look up data for a set of federations and pipe that information into Kino to create a nice
-table.
-
-```elixir
-SmeeFeds.federations([:wayf, :haka, :dfnaai, :swamid])
-|> Kino.DataTable.new()
-```
-
-## Using the quick Markdown export
-
-SmeeFeds has a built-in Markdown compatible export function for dumping its database into documentation. Here we pipe it
-into Kino, but you'd normally save it do disk or render it for showing on a webpage.
+You can list the IDs of all federations that have an MDQ service using a filter:
 
 ```elixir
 SmeeFeds.federations()
-|> SmeeFeds.Export.markdown()
-|> Kino.Markdown.new()
+|> SmeeFeds.Filter.mdq()
+|> SmeeFeds.ids()
+```
+
+### Getting a list of specific federations and writing their details to disk as a JSON file or CSV
+
+The JSON file can be used a new default set of federations.
+
+```elixir
+SmeeFeds.federations([:wayf, :haka, :dfnaai, :swamid])
+|> SmeeFeds.Export.json_file!("my_feds.json")
+```
+
+The CSV export is a simpler, lossy summary.
+
+```elixir
+csv =
+  SmeeFeds.federations([:wayf, :haka, :dfnaai, :swamid])
+  |> SmeeFeds.Export.csv()
+
+File.write!("my_feds.csv", csv)
+```
+
+### Defining your own lists of federations
+
+```elixir
+my_feds = [
+  SmeeFeds.Federation.new(:fed1,
+    name: "Example 1",
+    sources: [Smee.Source.new("https://example.com/metadata")]
+  ),
+  SmeeFeds.Federation.new(:fed2,
+    name: "Example 2",
+    sources: [Smee.Source.new("https://example.edu/metadata")]
+  )
+]
+```
+
+### Filtering lists of federations
+
+Listing all known federations, then selecting those in the EU, and listing their unique IDs
+
+```elixir
+SmeeFeds.federations()
+|> SmeeFeds.Filter.eu()
+|> SmeeFeds.ids()
+```
+
+Finding all hub-and-spoke networks with an MDQ service and returning their names
+
+```elixir
+SmeeFeds.federations()
+|> SmeeFeds.Filter.structure(:has)
+|> SmeeFeds.Filter.mdq()
+|> Enum.map(fn f -> f.name end)
+```
+
+```elixir
+IO.puts("Hello")
+```
+
+### Using with Smee to download UK Access Management Federation metadata, pick a random entity and get its XML
+
+Useful for testing as there's no need to remember or look up metadata details. This involves a large download, so may
+take awhile on slower connections.
+
+```elixir
+random_xml =
+  SmeeFeds.federation(:ukamf)
+  |> SmeeFeds.Federation.aggregate()
+  |> Smee.fetch!()
+  |> Smee.Metadata.random_entity()
+  |> Smee.Entity.xml()
 ```

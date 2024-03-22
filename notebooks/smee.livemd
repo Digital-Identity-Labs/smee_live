@@ -3,34 +3,46 @@
 # Smee Workbook
 
 ```elixir
-Mix.install(
- [{:smee, ">= 0.2.0"}, {:smee_view, ">= 0.1.0"}, {:smee_feds, ">= 0.1.0"}, {:rambo, "~> 0.3.4"}, {:kino, "~>0.9.4"}]
-)
-alias Smee.{Metadata, Entity, Source, MDQ}
+Mix.install([{:smee, ">= 0.4.1"}, {:rambo, "~> 0.3.4"}])
+alias Smee.{Metadata, Entity, Source, MDQ, Filter, Sigil, Publish, Transform, Extract, Fetch}
 ```
 
-## Grabbing some aggregated metadata with Smee and showing the XML
+## Requirements - Please Read!
 
-We download the XML, store it in a Metadata struct before outputting the XML again.
+Backend tools
+Please note: Smee does not do all processing itself using Elixir - it sometimes cheats (OK, it often cheats) by sending
+data to external programs for processing. At the moment it requires the following commandline utilities:
+
+* xmlsec1
+* xmllint
+* xsltproc
+
+On Debian: `sudo apt-get install xmlsec1 libxml2-utils xsltproc`
+On RedHat: `sudo yum install xmlsec1 libxml2 libxslt`
+On Macs: `brew install xmlsec1 libxml2 libxslt`
+
+## Grabbing some metadata with Smee
+
+This may take awhile, it's a large file, but the download will be cached making later runs much quicker
 
 ```elixir
-xml_fragment =
+metadata =
   Smee.source("http://metadata.ukfederation.org.uk/ukfederation-metadata.xml")
   |> Smee.fetch!()
-  |> Smee.Metadata.xml()
-  |> String.slice(0..5000) # I'd rather not show 80MB of XML!
+```
 
-Kino.Markdown.new("""
-\`\`\`xml
-  #{xml_fragment}
-\`\`\`
-""")
+## Viewing metadata XML
+
+Assuming you've downloaded the metadata into a variable called `metadata`
+
+```elixir
+  Smee.Metadata.xml(metadata)
+  |> IO.puts()
 ```
 
 ## Using MDQ
 
-MDQ is a much more efficient way to fetch just the metadata you need, when you need it. This snippet is returning a
-`Smee.Entity` struct.
+This should be very quick, as only one entity record is downloaded
 
 ```elixir
 cern_idp =
@@ -38,21 +50,37 @@ cern_idp =
   |> MDQ.lookup!("https://cern.ch/login")
 ```
 
-## List all IdP entity IDs along with their hashed IDs
+## List the EntityIDs of all IdPs in a federation
 
-Here we download a large aggregated metadata file, and stream the entity data from it one by one to extract just the 
-entity IDs and SHA1 ID hashes. The resulting map is piped into Kino for display.
+An example of streaming entities from a Metadata struct and passing the stream through filters
 
 ```elixir
-alias Smee.{Source, Fetch, Filter, Metadata}
 
 "http://metadata.ukfederation.org.uk/ukfederation-metadata.xml"
 |> Source.new()
 |> Fetch.remote!()
 |> Metadata.stream_entities()
 |> Filter.idp()
-|> Stream.map(fn e -> %{ entity_id: e.uri, hashed_id: "{sha1}#{e.uri_hash}" } end)
+|> Stream.map(fn e -> e.uri end)
 |> Enum.to_list()
-|> Kino.DataTable.new()
+
+```
+
+### Create an aggregate that only contains SPs with SIRTFI, that were registered over the previous 12 months
+
+Another contrived streaming and filtering example, this time to build a new metadata file.
+
+```elixir
+alias Smee.{Source, Fetch, Filter, Metadata, Publish}
+
+"http://metadata.ukfederation.org.uk/ukfederation-metadata.xml"
+|> Source.new()
+|> Fetch.remote!()
+|> Metadata.stream_entities()
+|> Filter.days(365)
+|> Filter.sp()
+|> Filter.assurance("https://refeds.org/sirtfi")
+|> Publish.xml()
+|> IO.puts()
 
 ```

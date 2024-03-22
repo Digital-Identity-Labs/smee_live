@@ -25,7 +25,7 @@ namespace :build do
     tmp_file = Tempfile.new("docker")
     git_hash = `git rev-parse --short HEAD`
 
-    rebuild_or_not = ENV["FORCE_REBUILD"] ? "--pull --force-rm" : ""
+    rebuild_or_not = ENV["FORCE_REBUILD"] ? "--pull --no-cache --force-rm" : ""
 
     if ENV["PUBLISH_MP_MODE"].to_s.downcase == "yes"
       command = "docker buildx build"
